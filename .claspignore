@@ -1,8 +1,36 @@
-# Ignore common development artifacts and configuration files
-.git/
+# 忽略所有檔案 (白名單機制起始)
+**/**
+
+# 允許上傳的檔案類型 (白名單)
+!appsscript.json
+!**/*.gs
+!**/*.js
+!**/*.html
+
+# 忽略本地開發環境與套件
 node_modules/
+package.json
+package-lock.json
+
 .clasp.json
 .claspignore
+
+.git/
 .gitignore
 README.md
 LICENSE
+
+# 忽略說明文件與規格書 (如 wbs-sheets-spec-v0.0.2.md)
+*.md
+docs/
+images/
+
+# 忽略測試檔案
+tests/
+spec/
+
+# 忽略系統與暫存檔
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
