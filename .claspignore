@@ -1,0 +1,8 @@
+# Ignore common development artifacts and configuration files
+.git/
+node_modules/
+.clasp.json
+.claspignore
+.gitignore
+README.md
+LICENSE
