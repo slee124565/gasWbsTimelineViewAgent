@@ -113,10 +113,11 @@ function onEdit(e) {
 }
 
 /**
- * 清空 WBS 工作表的內容，但保留第一列（標頭）、第一欄（Object）以及所有公式。
- * 主要用於模板化重用 WBS 結構。
+ * 清空 WBS 工作表的內容（任務資料），並重設所有自動化公式。
+ * 保留第一列（標頭）與第一欄（Object 欄位）。
+ * 主要用於模板化重用 WBS 結構或修復被意外刪除/修改的公式。
  */
-function resetWBSContent() {
+function resetWBSContentFormulas() {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
   const sheet = ss.getActiveSheet();
   const sheetName = sheet.getName();
@@ -136,14 +137,29 @@ function resetWBSContent() {
     return;
   }
 
-  // 3. 定義要清除的範圍：從 B2 到工作表的右下角
-  const rangeToClear = sheet.getRange(2, 2, lastRow - 1, lastCol - 1);
+  // 3. 清除所有任務內容（從 B2 到最後一列的最後一欄），保留第一欄 (Object) 和所有格式/驗證規則。
+  // 注意：clearContent() 會保留公式，但為了確保公式正確性，我們稍後會重新設定。
+  const contentRangeToClear = sheet.getRange(2, 2, lastRow - 1, lastCol - 1);
+  contentRangeToClear.clearContent();
 
-  // 4. 清除內容但保留公式與格式
-  // This method clears the cell values but keeps formulas, formatting, and data validation.
-  rangeToClear.clearContent();
+  // 4. 重設自動化公式 (DueDate 在 I欄, TaskDescription-2 在 J欄)
+  const dueDateFormula = `=IF(AND(D2<>"", E2<>""), WORKDAY(D2, E2, 'holidays-tw'!A$2:A), "")`;
+  const taskDesc2Formula = `=IF(C2<>"", IF(F2<>"", "["&F2&"]-"&C2, "[未指派]-"&C2), "")`;
 
-  SpreadsheetApp.getUi().alert(`已成功清除 "${sheetName}" 的任務內容 (保留首欄與公式)。`);
+  // 清除 I 欄與 J 欄的舊內容（從第2列開始），以避免舊資料干擾，並確保公式重新應用
+  sheet.getRange('I2:J' + sheet.getMaxRows()).clearContent(); // Clear to max rows
+
+  // 在第2列設定基準公式
+  sheet.getRange('I2').setFormula(dueDateFormula);
+  sheet.getRange('J2').setFormula(taskDesc2Formula);
+
+  // 將公式自動填滿到工作表的其餘部分
+  const sourceRange = sheet.getRange('I2:J2');
+  const destinationRange = sheet.getRange('I2:J' + sheet.getMaxRows()); // 擴展到最大行數
+  sourceRange.autoFill(destinationRange, SpreadsheetApp.AutoFillSeries.DEFAULT_SERIES);
+  
+
+  SpreadsheetApp.getUi().alert(`已成功清除 "${sheetName}" 的任務內容並重設欄位公式。`);
 }
 
 
@@ -155,6 +171,6 @@ function onOpen() {
   ui.createMenu('🚀 WBS 自動化工具')
     .addItem('1. 建立新 WBS 工作表', 'initializeWBSSystem')
     .addSeparator()
-    .addItem('2. 清空任務內容 (保留首欄)', 'resetWBSContent')
+    .addItem('2. 重設任務內容與公式 (保留首欄)', 'resetWBSContentFormulas')
     .addToUi();
 }
