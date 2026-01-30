@@ -112,6 +112,40 @@ function onEdit(e) {
   }
 }
 
+/**
+ * 清空 WBS 工作表的內容，但保留第一列（標頭）、第一欄（Object）以及所有公式。
+ * 主要用於模板化重用 WBS 結構。
+ */
+function resetWBSContent() {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const sheet = ss.getActiveSheet();
+  const sheetName = sheet.getName();
+
+  // 1. 確認是在 wbs 工作表上操作
+  if (!sheetName.startsWith('wbs')) {
+    SpreadsheetApp.getUi().alert('此功能只能在 "wbs" 或 "wbs-x" 工作表上執行。');
+    return;
+  }
+
+  const lastRow = sheet.getLastRow();
+  const lastCol = sheet.getLastColumn();
+
+  // 2. 如果只有標頭列，則無需操作
+  if (lastRow < 2) {
+    SpreadsheetApp.getUi().alert('工作表沒有需要清除的資料。');
+    return;
+  }
+
+  // 3. 定義要清除的範圍：從 B2 到工作表的右下角
+  const rangeToClear = sheet.getRange(2, 2, lastRow - 1, lastCol - 1);
+
+  // 4. 清除內容但保留公式與格式
+  // This method clears the cell values but keeps formulas, formatting, and data validation.
+  rangeToClear.clearContent();
+
+  SpreadsheetApp.getUi().alert(`已成功清除 "${sheetName}" 的任務內容 (保留首欄與公式)。`);
+}
+
 
 /**
  * 新增自訂選單
@@ -120,5 +154,7 @@ function onOpen() {
   const ui = SpreadsheetApp.getUi();
   ui.createMenu('🚀 WBS 自動化工具')
     .addItem('1. 建立新 WBS 工作表', 'initializeWBSSystem')
+    .addSeparator()
+    .addItem('2. 清空任務內容 (保留首欄)', 'resetWBSContent')
     .addToUi();
 }
