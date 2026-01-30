@@ -1,0 +1,7 @@
+Object	TaskTitle	TaskDescription-1	StartDate	WorkDays	Resource	TaskStatus	DueDate	TaskDescription-2	DoneDate
+ferqo matter sdk	ferqo app sdk - Phase 1 	現況盤點與架構邊界定義	2026-02-01	5	Rivon	NotStarted	=workday(D2,5,'holidays-tw'!A1:A)	="["&F2&"]-" &C2	=H2
+ferqo matter sdk	ferqo app sdk - Phase 2 	App SDK 封裝	=workday(H2,1,'holidays-tw'!A:A)	5	Pochi	NotStarted	=workday(D3,5,'holidays-tw'!A2:A)	="["&F3&"]-" &C3	=H3
+ferqo matter sdk	ferqo app sdk - Phase 3 	Gateway SDK 封裝	=workday(H3,1,'holidays-tw'!A:A)	5	Ross	NotStarted	=workday(D4,5,'holidays-tw'!A3:A)	="["&F4&"]-" &C4	=H4
+ferqo matter sdk	ferqo app sdk - Phase 4 	Cloud API / 平台服務化	=workday(H4,1,'holidays-tw'!A:A)	5	Dennis	NotStarted	=workday(D5,5,'holidays-tw'!A4:A)	="["&F5&"]-" &C5	=H5
+ferqo matter sdk	ferqo app sdk - Phase 5 	開發者體驗與文件 / Sample App	=workday(H5,1,'holidays-tw'!A:A)	5	Stella	NotStarted	=workday(D6,5,'holidays-tw'!A5:A)	="["&F6&"]-" &C6	=H6
+ferqo matter sdk	ferqo app sdk - Phase 6 	Pilot Partner 導入與調整	=workday(H6,1,'holidays-tw'!A:A)	5	Pochi	NotStarted	=workday(D7,5,'holidays-tw'!A6:A)	="["&F7&"]-" &C7	=H7

@@ -22,6 +22,7 @@ LICENSE
 
 # 忽略說明文件與規格書 (如 wbs-sheets-spec-v0.0.2.md)
 *.md
+*.csv
 docs/
 images/
 
