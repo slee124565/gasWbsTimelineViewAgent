@@ -83,6 +83,7 @@ function initializeWBSSystem() {
 /**
  * onEdit Trigger: 當使用者編輯儲存格時自動觸發
  * 處理 TaskStatus 與 DoneDate 的連動
+ * 處理 Object 變更時的顏色自動更新
  */
 function onEdit(e) {
   const range = e.range;
@@ -109,6 +110,16 @@ function onEdit(e) {
       // 當狀態不是 "Done" 時，清空完成日期
       doneDateCell.clearContent();
     }
+  }
+
+  // 如果編輯的是 Object (A欄, 第1欄) 且不是標頭列，就觸發顏色更新
+  if (editedCol === 1 && editedRow > 1) {
+    applyObjectColorCoding();
+  }
+
+  // 如果編輯的是 Resource (F欄, 第6欄) 且不是標頭列，就觸發顏色更新
+  if (editedCol === 6 && editedRow > 1) {
+    applyResourceColorCoding();
   }
 }
 
@@ -138,7 +149,6 @@ function resetWBSContentFormulas() {
   }
 
   // 3. 清除所有任務內容（從 B2 到最後一列的最後一欄），保留第一欄 (Object) 和所有格式/驗證規則。
-  // 注意：clearContent() 會保留公式，但為了確保公式正確性，我們稍後會重新設定。
   const contentRangeToClear = sheet.getRange(2, 2, lastRow - 1, lastCol - 1);
   contentRangeToClear.clearContent();
 
@@ -146,20 +156,132 @@ function resetWBSContentFormulas() {
   const dueDateFormula = `=IF(AND(D2<>"", E2<>""), WORKDAY(D2, E2, 'holidays-tw'!A$2:A), "")`;
   const taskDesc2Formula = `=IF(C2<>"", IF(F2<>"", "["&F2&"]-"&C2, "[未指派]-"&C2), "")`;
 
-  // 清除 I 欄與 J 欄的舊內容（從第2列開始），以避免舊資料干擾，並確保公式重新應用
   sheet.getRange('I2:J' + sheet.getMaxRows()).clearContent(); // Clear to max rows
 
-  // 在第2列設定基準公式
   sheet.getRange('I2').setFormula(dueDateFormula);
   sheet.getRange('J2').setFormula(taskDesc2Formula);
 
-  // 將公式自動填滿到工作表的其餘部分
   const sourceRange = sheet.getRange('I2:J2');
   const destinationRange = sheet.getRange('I2:J' + sheet.getMaxRows()); // 擴展到最大行數
   sourceRange.autoFill(destinationRange, SpreadsheetApp.AutoFillSeries.DEFAULT_SERIES);
   
+  // 5. 清除所有背景顏色（除了標頭）
+  sheet.getRange(2, 1, lastRow - 1, lastCol).setBackground(null);
+
 
   SpreadsheetApp.getUi().alert(`已成功清除 "${sheetName}" 的任務內容並重設欄位公式。`);
+}
+
+/**
+ * 根據 Object 欄位的值，為 WBS 表格的每一列應用不同的背景顏色。
+ */
+function applyObjectColorCoding() {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const sheet = ss.getActiveSheet();
+  const sheetName = sheet.getName();
+
+  if (!sheetName.startsWith('wbs')) {
+    SpreadsheetApp.getUi().alert('此功能只能在 "wbs" 或 "wbs-x" 工作表上執行。');
+    return;
+  }
+
+  const dataRange = sheet.getDataRange();
+  const values = dataRange.getValues();
+  const lastCol = dataRange.getLastColumn();
+
+  // 定義一個顏色列表，用於循環
+  const colors = [
+    '#fff2cc', // Light Yellow
+    '#d9ead3', // Light Green
+    '#f4cccc', // Light Red
+    '#d0e0e3', // Light Blue
+    '#ead1dc', // Light Purple
+    '#c9daf8', // Light Royal Blue
+    '#d9d2e9', // Light Violet
+    '#ace6e6', // Light Cyan
+    '#ffe5b4', // Light Orange
+    '#cccccc'  // Light Gray
+  ];
+  let colorIndex = 0;
+  const objectColorMap = {};
+
+  // 從第二列開始遍歷（跳過標頭）
+  for (let i = 1; i < values.length; i++) {
+    const objectName = values[i][0]; // 第 A 欄是 Object
+
+    if (objectName) {
+      // 如果這個 Object 還沒有分配顏色，就給它一個新的
+      if (!objectColorMap[objectName]) {
+        objectColorMap[objectName] = colors[colorIndex % colors.length];
+        colorIndex++;
+      }
+      
+      // 應用顏色到整列
+      const rowRange = sheet.getRange(i + 1, 1, 1, lastCol);
+      rowRange.setBackground(objectColorMap[objectName]);
+    } else {
+      // 如果 Object 為空，則清除背景顏色
+      const rowRange = sheet.getRange(i + 1, 1, 1, lastCol);
+      rowRange.setBackground(null);
+    }
+  }
+  SpreadsheetApp.getUi().alert('已成功套用 Object 顏色標記。');
+}
+
+/**
+ * 根據 Resource 欄位的值，為 WBS 表格的每一列應用不同的背景顏色。
+ */
+function applyResourceColorCoding() {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const sheet = ss.getActiveSheet();
+  const sheetName = sheet.getName();
+
+  if (!sheetName.startsWith('wbs')) {
+    SpreadsheetApp.getUi().alert('此功能只能在 "wbs" 或 "wbs-x" 工作表上執行。');
+    return;
+  }
+
+  const dataRange = sheet.getDataRange();
+  const values = dataRange.getValues();
+  const lastCol = dataRange.getLastColumn();
+
+  // 定義一個顏色列表，用於循環 (可以使用與 Object 不同的顏色，或從同一調色盤中選取)
+  const colors = [
+    '#b6d7a8', // Light Green (different shade)
+    '#a2c4c9', // Light Blue (different shade)
+    '#ea9999', // Light Red (different shade)
+    '#f9cb9c', // Light Orange (different shade)
+    '#b4a7d6', // Light Purple (different shade)
+    '#a4c2f4', // Light Blue
+    '#cfc2b6', // Light Brown
+    '#8ee4af', // Mint Green
+    '#fada5e', // Saffron
+    '#f5b7b1'  // Light Coral
+  ];
+  let colorIndex = 0;
+  const resourceColorMap = {};
+
+  // 從第二列開始遍歷（跳過標頭）
+  for (let i = 1; i < values.length; i++) {
+    const resourceName = values[i][5]; // 第 F 欄是 Resource (索引為 5)
+
+    if (resourceName) {
+      // 如果這個 Resource 還沒有分配顏色，就給它一個新的
+      if (!resourceColorMap[resourceName]) {
+        resourceColorMap[resourceName] = colors[colorIndex % colors.length];
+        colorIndex++;
+      }
+      
+      // 應用顏色到整列
+      const rowRange = sheet.getRange(i + 1, 1, 1, lastCol);
+      rowRange.setBackground(resourceColorMap[resourceName]);
+    } else {
+      // 如果 Resource 為空，則清除背景顏色
+      const rowRange = sheet.getRange(i + 1, 1, 1, lastCol);
+      rowRange.setBackground(null);
+    }
+  }
+  SpreadsheetApp.getUi().alert('已成功套用 Resource 顏色標記。');
 }
 
 
@@ -172,5 +294,7 @@ function onOpen() {
     .addItem('1. 建立新 WBS 工作表', 'initializeWBSSystem')
     .addSeparator()
     .addItem('2. 重設任務內容與公式 (保留首欄)', 'resetWBSContentFormulas')
+    .addItem('3. 套用 Object 顏色標記', 'applyObjectColorCoding')
+    .addItem('4. 套用 Resource 顏色標記', 'applyResourceColorCoding') // 新增 Resource 顏色標記選項
     .addToUi();
 }

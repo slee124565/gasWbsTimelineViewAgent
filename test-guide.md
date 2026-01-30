@@ -75,5 +75,62 @@ This document provides the steps to manually test the functionality of the `gasW
 8.  **Verification:**
     *   Check cell `H3` again. The date should now be cleared and the cell should be blank.
 
+### Test Case 5: Object-Based Row Color-Coding
+
+**Objective:** Verify that rows are automatically colored based on the value in the `Object` column, both via the menu and on edit.
+
+**Steps (Part A: Manual Trigger):**
+
+1.  Go to the `wbs` sheet.
+2.  Populate some data in rows 2, 3, 4, and 5.
+    *   In cell `A2`, enter `Project Alpha`.
+    *   In cell `A3`, enter `Project Alpha`.
+    *   In cell `A4`, enter `Project Beta`.
+    *   In cell `A5`, enter `Project Gamma`.
+3.  Click on the **🚀 WBS 自動化工具** menu.
+4.  Select **3. 套用 Object 顏色標記**.
+5.  A confirmation alert should appear. Click **OK**.
+6.  **Verification:**
+    *   Rows 2 and 3 should have the same background color.
+    *   Row 4 should have a different background color from rows 2/3.
+    *   Row 5 should have a different background color from rows 2/3 and 4.
+
+**Steps (Part B: Automatic `onEdit` Trigger):**
+
+1.  Continuing from the previous state, go to cell `A5`.
+2.  Change the value from `Project Gamma` to `Project Alpha`.
+3.  **Verification:**
+    *   The background color of row 5 should automatically change to match the color of rows 2 and 3. No need to run the menu item again.
+4.  Now, go to cell `A4`.
+5.  Change the value from `Project Beta` to `Project Zeta`.
+6.  **Verification:**
+    *   The background color of row 4 should change to a new, different color.
+
+### Test Case 6: Resource-Based Row Color-Coding
+
+**Objective:** Verify that rows are automatically colored based on the value in the `Resource` column, both via the menu and on edit.
+
+**Steps (Part A: Manual Trigger):**
+
+1.  Go to the `wbs` sheet.
+2.  Populate `Resource` data in rows 2, 3, and 4.
+    *   In cell `F2`, enter `Alice`.
+    *   In cell `F3`, enter `Bob`.
+    *   In cell `F4`, enter `Alice`.
+3.  Click on the **🚀 WBS 自動化工具** menu.
+4.  Select **4. 套用 Resource 顏色標記**.
+5.  A confirmation alert should appear. Click **OK**.
+6.  **Verification:**
+    *   Rows 2 and 4 should have the same background color.
+    *   Row 3 should have a different background color.
+    *   Note: These colors will overwrite the `Object` colors from the previous test.
+
+**Steps (Part B: Automatic `onEdit` Trigger):**
+
+1.  Continuing from the previous state, go to cell `F3`.
+2.  Change the value from `Bob` to `Alice`.
+3.  **Verification:**
+    *   The background color of row 3 should automatically change to match the color of rows 2 and 4.
+
 ---
 **End of Test Guide**
