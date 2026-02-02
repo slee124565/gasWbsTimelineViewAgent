@@ -216,16 +216,16 @@ function applyObjectColorCoding() {
         colorIndex++;
       }
       
-      // 應用顏色到整列
-      const rowRange = sheet.getRange(i + 1, 1, 1, lastCol);
-      rowRange.setBackground(objectColorMap[objectName]);
+      // 應用顏色到 Object 儲存格
+      const cellRange = sheet.getRange(i + 1, 1); // A 欄
+      cellRange.setBackground(objectColorMap[objectName]);
     } else {
       // 如果 Object 為空，則清除背景顏色
-      const rowRange = sheet.getRange(i + 1, 1, 1, lastCol);
-      rowRange.setBackground(null);
+      const cellRange = sheet.getRange(i + 1, 1); // A 欄
+      cellRange.setBackground(null);
     }
   }
-  SpreadsheetApp.getUi().alert('已成功套用 Object 顏色標記。');
+
 }
 
 /**
@@ -272,16 +272,16 @@ function applyResourceColorCoding() {
         colorIndex++;
       }
       
-      // 應用顏色到整列
-      const rowRange = sheet.getRange(i + 1, 1, 1, lastCol);
-      rowRange.setBackground(resourceColorMap[resourceName]);
+      // 應用顏色到 Resource 儲存格
+      const cellRange = sheet.getRange(i + 1, 6); // F 欄
+      cellRange.setBackground(resourceColorMap[resourceName]);
     } else {
       // 如果 Resource 為空，則清除背景顏色
-      const rowRange = sheet.getRange(i + 1, 1, 1, lastCol);
-      rowRange.setBackground(null);
+      const cellRange = sheet.getRange(i + 1, 6); // F 欄
+      cellRange.setBackground(null);
     }
   }
-  SpreadsheetApp.getUi().alert('已成功套用 Resource 顏色標記。');
+
 }
 
 

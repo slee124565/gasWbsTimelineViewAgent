@@ -1,6 +1,6 @@
-# Manual Test Guide for WBS Automation Script
+# Manual Test Guide for WBS Automation Script (v0.0.7)
 
-This document provides the steps to manually test the functionality of the `gasWbsTimelineViewAgent` script after the v0.0.2 updates.
+This document provides the steps to manually test the functionality of the `gasWbsTimelineViewAgent` script, specifically for the features and fixes introduced in v0.0.7.
 
 ## 1. Prerequisites
 
@@ -15,6 +15,8 @@ This document provides the steps to manually test the functionality of the `gasW
 ## 2. Test Cases
 
 ### Test Case 1: Initial Sheet Creation and Setup
+
+**(No changes from the previous version, this test remains the same)**
 
 **Objective:** Verify that the script correctly creates and initializes the `wbs` and `holidays-tw` sheets with all automated rules.
 
@@ -32,6 +34,8 @@ This document provides the steps to manually test the functionality of the `gasW
 
 ### Test Case 2: Automated `DueDate` Calculation
 
+**(No changes from the previous version, this test remains the same)**
+
 **Objective:** Verify that the `DueDate` is calculated automatically based on `StartDate`, `WorkDays`, and holidays.
 
 **Steps:**
@@ -46,6 +50,8 @@ This document provides the steps to manually test the functionality of the `gasW
 
 ### Test Case 3: Automated `TaskDescription-2` Generation
 
+**(No changes from the previous version, this test remains the same)**
+
 **Objective:** Verify that `TaskDescription-2` is generated correctly based on `Resource` and `TaskDescription-1`.
 
 **Steps:**
@@ -59,6 +65,8 @@ This document provides the steps to manually test the functionality of the `gasW
     *   Check cell `J2` again. It should automatically update to `[Alice]-Develop feature X`.
 
 ### Test Case 4: `onEdit` Trigger for `DoneDate`
+
+**(No changes from the previous version, this test remains the same)**
 
 **Objective:** Verify that the `DoneDate` is automatically populated when `TaskStatus` is set to "Done" and cleared otherwise.
 
@@ -75,9 +83,9 @@ This document provides the steps to manually test the functionality of the `gasW
 8.  **Verification:**
     *   Check cell `H3` again. The date should now be cleared and the cell should be blank.
 
-### Test Case 5: Object-Based Row Color-Coding
+### Test Case 5: Object-Based **Cell** Color-Coding (v0.0.7 Update)
 
-**Objective:** Verify that rows are automatically colored based on the value in the `Object` column, both via the menu and on edit.
+**Objective:** Verify that **only the Object cell (Column A)** is colored based on its value, both via the menu and on edit.
 
 **Steps (Part A: Manual Trigger):**
 
@@ -91,24 +99,25 @@ This document provides the steps to manually test the functionality of the `gasW
 4.  Select **3. 套用 Object 顏色標記**.
 5.  A confirmation alert should appear. Click **OK**.
 6.  **Verification:**
-    *   Rows 2 and 3 should have the same background color.
-    *   Row 4 should have a different background color from rows 2/3.
-    *   Row 5 should have a different background color from rows 2/3 and 4.
+    *   **Cell `A2` and `A3`** should have the same background color.
+    *   **Cell `A4`** should have a different background color from `A2`/`A3`.
+    *   **Cell `A5`** should have a different background color from `A2`/`A3` and `A4`.
+    *   **Crucially, verify that other cells in rows 2-5 (e.g., columns B, C, D) do NOT have any background color.**
 
 **Steps (Part B: Automatic `onEdit` Trigger):**
 
 1.  Continuing from the previous state, go to cell `A5`.
 2.  Change the value from `Project Gamma` to `Project Alpha`.
 3.  **Verification:**
-    *   The background color of row 5 should automatically change to match the color of rows 2 and 3. No need to run the menu item again.
+    *   The background color of **cell `A5`** should automatically change to match the color of cells `A2` and `A3`.
 4.  Now, go to cell `A4`.
 5.  Change the value from `Project Beta` to `Project Zeta`.
 6.  **Verification:**
-    *   The background color of row 4 should change to a new, different color.
+    *   The background color of **cell `A4`** should change to a new, different color.
 
-### Test Case 6: Resource-Based Row Color-Coding
+### Test Case 6: Resource-Based **Cell** Color-Coding (v0.0.7 Update)
 
-**Objective:** Verify that rows are automatically colored based on the value in the `Resource` column, both via the menu and on edit.
+**Objective:** Verify that **only the Resource cell (Column F)** is colored based on its value, both via the menu and on edit.
 
 **Steps (Part A: Manual Trigger):**
 
@@ -121,16 +130,16 @@ This document provides the steps to manually test the functionality of the `gasW
 4.  Select **4. 套用 Resource 顏色標記**.
 5.  A confirmation alert should appear. Click **OK**.
 6.  **Verification:**
-    *   Rows 2 and 4 should have the same background color.
-    *   Row 3 should have a different background color.
-    *   Note: These colors will overwrite the `Object` colors from the previous test.
+    *   **Cell `F2` and `F4`** should have the same background color.
+    *   **Cell `F3`** should have a different background color.
+    *   **Verify that other cells in these rows (e.g., columns A, B, C) do NOT have their background color changed by this action.** (The color from Test Case 5 on column A should remain).
 
 **Steps (Part B: Automatic `onEdit` Trigger):**
 
 1.  Continuing from the previous state, go to cell `F3`.
 2.  Change the value from `Bob` to `Alice`.
 3.  **Verification:**
-    *   The background color of row 3 should automatically change to match the color of rows 2 and 4.
+    *   The background color of **cell `F3`** should automatically change to match the color of cells `F2` and `F4`.
 
 ---
 **End of Test Guide**
