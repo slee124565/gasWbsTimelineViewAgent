@@ -38,6 +38,7 @@ WBS 的核心價值在於將專案任務進行系統性的分解。搭配 Google
 1.  **開啟 Google Sheet**: 建立或開啟一個 Google Sheet 檔案。
 2.  **進入 Apps Script 編輯器**: 點擊頂部選單的 **擴充功能 > Apps Script**。
 3.  **貼上程式碼**: 將本專案中的 `code.js` 檔案內容完整複製並貼到 Apps Script 編輯器中。
+    你也可以直接從這個連結取得最新版本的程式碼：[code.js](https://raw.githubusercontent.com/slee124565/gasWbsTimelineViewAgent/refs/heads/main/code.js)
 4.  **儲存專案**: 點擊儲存按鈕。
 5.  **重新整理 Google Sheet**: 回到 Google Sheet 頁面並重新整理瀏覽器。你會在頂部選單看到一個新的 **"🚀 WBS 自動化工具"** 選單。
 
