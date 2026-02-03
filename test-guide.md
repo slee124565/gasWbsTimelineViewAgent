@@ -18,7 +18,7 @@ This document provides the steps to manually test the functionality of the `gasW
 
 **(No changes from the previous version, this test remains the same)**
 
-**Objective:** Verify that the script correctly creates and initializes the `wbs` and `holidays-tw` sheets with all automated rules.
+**Objective:** Verify that the script correctly creates and initializes the `wbs` and `TW_HOLIDAYS` sheets with all automated rules.
 
 **Steps:**
 
@@ -26,10 +26,10 @@ This document provides the steps to manually test the functionality of the `gasW
 2.  Select **1. 建立新 WBS 工作表**.
 3.  A popup saying "已成功建立工作表：wbs，並已設定自動化規則。" should appear. Click **OK**.
 4.  **Verification:**
-    *   Check that two new sheets named `wbs` and `holidays-tw` have been created.
+    *   Check that two new sheets named `wbs` and `TW_HOLIDAYS` have been created.
     *   In the `wbs` sheet, confirm the header row is blue and bold.
     *   Click on any cell in the `TaskStatus` column (Column G, from G2 downwards). A dropdown arrow should appear. Clicking it should show the options: `NotStarted`, `InProgress`, `Done`, `Blocked`.
-    *   Click on cell `I2` (DueDate) and verify that its formula is `=IF(AND(D2<>"", E2<>""), WORKDAY(D2, E2, 'holidays-tw'!A$2:A), "")`.
+    *   Click on cell `I2` (DueDate) and verify that its formula is `=IF(AND(D2<>"", E2<>""), WORKDAY(D2, E2, 'TW_HOLIDAYS'!A$2:A), "")`.
     *   Click on cell `J2` (TaskDescription-2) and verify that its formula is `=IF(C2<>"", IF(F2<>"", "["&F2&"]-"&C2, "[未指派]-"&C2), "")`.
 
 ### Test Case 2: Automated `DueDate` Calculation
@@ -40,7 +40,7 @@ This document provides the steps to manually test the functionality of the `gasW
 
 **Steps:**
 
-1.  Go to the `holidays-tw` sheet. In cell `A2`, enter a date that falls within your test's timeframe, for example, `2026-02-03`.
+1.  Go to the `TW_HOLIDAYS` sheet. In cell `A2`, enter a date that falls within your test's timeframe, for example, `2026-02-03`.
 2.  Go to the `wbs` sheet.
 3.  In cell `D2` (`StartDate`), enter the date `2026-02-01`.
 4.  In cell `E2` (`WorkDays`), enter the number `5`.
@@ -140,6 +140,31 @@ This document provides the steps to manually test the functionality of the `gasW
 2.  Change the value from `Bob` to `Alice`.
 3.  **Verification:**
     *   The background color of **cell `F3`** should automatically change to match the color of cells `F2` and `F4`.
+
+### Test Case 7: Reset WBS Content and Formulas
+
+**Objective:** Verify that the "Reset Task Content & Formulas" function clears all task data (including the `Object` column) from row 2 downwards, resets formulas, and removes background colors.
+
+**Steps:**
+
+1.  Go to the `wbs` sheet.
+2.  Populate some data across multiple rows (e.g., rows 2, 3, 4).
+    *   In cell `A2`, enter `Test Project`.
+    *   In cell `B2`, enter `Test Task`.
+    *   In cell `C2`, enter `Test Description`.
+    *   In cell `F2`, enter `Test Resource`.
+    *   In cell `A3`, enter `Another Project`.
+    *   Use the color-coding functions to apply some background colors to columns A and F.
+3.  Click on the **🚀 WBS 自動化工具** menu.
+4.  Select **2. 重設任務內容與公式 (保留首欄)**.
+5.  A confirmation alert `已成功清除 "wbs" 的任務內容並重設欄位公式。` should appear. Click **OK**.
+6.  **Verification:**
+    *   Verify that the range `A2:J4` (or as far as you entered data) is completely empty.
+    *   **Crucially, verify that cell `A2` is now blank.**
+    *   Verify that the background colors in the data rows have been removed.
+    *   Click on cell `I2` (DueDate) and verify that its formula has been reset to `=IF(AND(D2<>"", E2<>""), WORKDAY(D2, E2, 'TW_HOLIDAYS'!A$2:A), "")`.
+    *   Click on cell `J2` (TaskDescription-2) and verify that its formula has been reset to `=IF(C2<>"", IF(F2<>"", "["&F2&"]-"&C2, "[未指派]-"&C2), "")`.
+    *   Verify that the header row (row 1) remains unchanged.
 
 ---
 **End of Test Guide**

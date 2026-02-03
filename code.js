@@ -2,6 +2,7 @@
  * 調整後的初始化腳本：檢查 wbs 是否存在，並建立對應名稱的工作表
  */
 function initializeWBSSystem() {
+  console.log('initializeWBSSystem function triggered');
   const ss = SpreadsheetApp.getActiveSpreadsheet();
   const baseName = 'wbs';
   let targetSheetName = '';
@@ -44,7 +45,7 @@ function initializeWBSSystem() {
 
   // --- 3. 新增：設定自動化公式 ---
   // A. DueDate (I欄) 公式
-  const dueDateFormula = `=IF(AND(D2<>"", E2<>""), WORKDAY(D2, E2, 'holidays-tw'!A$2:A), "")`;
+  const dueDateFormula = `=IF(AND(D2<>"", E2<>""), WORKDAY(D2, E2, TW_HOLIDAYS!A$2:A), "")`;
   newWbsSheet.getRange('I2').setFormula(dueDateFormula);
 
   // B. TaskDescription-2 (J欄) 公式
@@ -65,7 +66,7 @@ function initializeWBSSystem() {
 
 
   // --- 5. 檢查並初始化 holidays-tw (此表通常為全域參考，若不存在才建立) ---
-  const holidayName = 'holidays-tw';
+  const holidayName = 'TW_HOLIDAYS';
   let holidaySheet = ss.getSheetByName(holidayName);
   if (!holidaySheet) {
     holidaySheet = ss.insertSheet(holidayName);
@@ -86,6 +87,7 @@ function initializeWBSSystem() {
  * 處理 Object 變更時的顏色自動更新
  */
 function onEdit(e) {
+  console.log('onEdit function triggered');
   const range = e.range;
   const sheet = range.getSheet();
   const sheetName = sheet.getName();
@@ -125,10 +127,11 @@ function onEdit(e) {
 
 /**
  * 清空 WBS 工作表的內容（任務資料），並重設所有自動化公式。
- * 保留第一列（標頭）與第一欄（Object 欄位）。
+ * 此版本會清除所有欄位（包含第一欄 Object）的內容，僅保留標頭。
  * 主要用於模板化重用 WBS 結構或修復被意外刪除/修改的公式。
  */
 function resetWBSContentFormulas() {
+  console.log('resetWBSContentFormulas function triggered');
   const ss = SpreadsheetApp.getActiveSpreadsheet();
   const sheet = ss.getActiveSheet();
   const sheetName = sheet.getName();
@@ -148,12 +151,12 @@ function resetWBSContentFormulas() {
     return;
   }
 
-  // 3. 清除所有任務內容（從 B2 到最後一列的最後一欄），保留第一欄 (Object) 和所有格式/驗證規則。
-  const contentRangeToClear = sheet.getRange(2, 2, lastRow - 1, lastCol - 1);
+  // 3. 清除所有任務內容（從 A2 到最後一列的最後一欄），並保留所有格式/驗證規則。
+  const contentRangeToClear = sheet.getRange(2, 1, lastRow - 1, lastCol);
   contentRangeToClear.clearContent();
 
   // 4. 重設自動化公式 (DueDate 在 I欄, TaskDescription-2 在 J欄)
-  const dueDateFormula = `=IF(AND(D2<>"", E2<>""), WORKDAY(D2, E2, 'holidays-tw'!A$2:A), "")`;
+  const dueDateFormula = `=IF(AND(D2<>"", E2<>""), WORKDAY(D2, E2, TW_HOLIDAYS!A$2:A), "")`;
   const taskDesc2Formula = `=IF(C2<>"", IF(F2<>"", "["&F2&"]-"&C2, "[未指派]-"&C2), "")`;
 
   sheet.getRange('I2:J' + sheet.getMaxRows()).clearContent(); // Clear to max rows
@@ -176,6 +179,7 @@ function resetWBSContentFormulas() {
  * 根據 Object 欄位的值，為 WBS 表格的每一列應用不同的背景顏色。
  */
 function applyObjectColorCoding() {
+  console.log('applyObjectColorCoding function triggered');
   const ss = SpreadsheetApp.getActiveSpreadsheet();
   const sheet = ss.getActiveSheet();
   const sheetName = sheet.getName();
@@ -232,6 +236,7 @@ function applyObjectColorCoding() {
  * 根據 Resource 欄位的值，為 WBS 表格的每一列應用不同的背景顏色。
  */
 function applyResourceColorCoding() {
+  console.log('applyResourceColorCoding function triggered');
   const ss = SpreadsheetApp.getActiveSpreadsheet();
   const sheet = ss.getActiveSheet();
   const sheetName = sheet.getName();
@@ -289,11 +294,12 @@ function applyResourceColorCoding() {
  * 新增自訂選單
  */
 function onOpen() {
+  console.log('onOpen function triggered');
   const ui = SpreadsheetApp.getUi();
   ui.createMenu('🚀 WBS 自動化工具')
     .addItem('1. 建立新 WBS 工作表', 'initializeWBSSystem')
     .addSeparator()
-    .addItem('2. 重設任務內容與公式 (保留首欄)', 'resetWBSContentFormulas')
+    .addItem('2. 重設任務內容與公式', 'resetWBSContentFormulas')
     .addItem('3. 套用 Object 顏色標記', 'applyObjectColorCoding')
     .addItem('4. 套用 Resource 顏色標記', 'applyResourceColorCoding') // 新增 Resource 顏色標記選項
     .addToUi();
