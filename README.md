@@ -41,6 +41,8 @@ WBS 的核心價值在於將專案任務進行系統性的分解。搭配 Google
 4.  **儲存專案**: 點擊儲存按鈕。
 5.  **重新整理 Google Sheet**: 回到 Google Sheet 頁面並重新整理瀏覽器。你會在頂部選單看到一個新的 **"🚀 WBS 自動化工具"** 選單。
 
+    ![Google Sheet Custom Menu](google-sheet-cust-menu.png)
+
 ---
 
 ## 選單功能詳解
