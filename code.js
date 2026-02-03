@@ -56,20 +56,28 @@ function resetWBSContentFormulas() {
   const lastRow = sheet.getLastRow();
   const lastCol = sheet.getLastColumn();
 
-  // If there's no data to clear (only a header row), do nothing.
-  if (lastRow < 2) {
-    SpreadsheetApp.getUi().alert('There is no data to clear.');
-    return;
+  // If there's more than just a header row, clear the content.
+  if (lastRow > 1) {
+    // Clear content from B2 to the last data cell, preserving column A (Object)
+    if (lastCol > 1) {
+      const rangeToClear = sheet.getRange(2, 2, lastRow - 1, lastCol - 1);
+      rangeToClear.clearContent();
+    }
+    // Clear all background colors in the data range
+    sheet.getRange(2, 1, lastRow - 1, lastCol).setBackground(null);
   }
 
-  // Clear content from the second column to the last column, preserving the 'Object' column.
-  const contentRangeToClear = sheet.getRange(2, 2, lastRow - 1, lastCol - 1);
-  contentRangeToClear.clearContent();
-
-  // Clear all background colors (except for the header)
-  sheet.getRange(2, 1, lastRow - 1, lastCol).setBackground(null);
+  // Set/Reset the array formulas in the header row.
+  // Formula for DueDate (I1) based on Man-days (E) and holidays.
+  const dueDateFormula = '=ARRAYFORMULA(IF(ROW(A:A)=1, "DueDate", IF(E:E<>"", WORKDAY(TODAY(), E:E, INDIRECT("TW_HOLIDAYS!A2:A")), "")))';
   
-  SpreadApp.getUi().alert('Task content has been cleared and formulas have been reset.');
+  // Formula for TaskDescription-2 (J1) combining Task Name (B) and Resource (F).
+  const taskDescFormula = '=ARRAYFORMULA(IF(ROW(A:A)=1, "TaskDescription-2", IF(A:A<>"", B:B & " (" & F:F & ")", "")))';
+
+  sheet.getRange('I1').setFormula(dueDateFormula);
+  sheet.getRange('J1').setFormula(taskDescFormula);
+  
+  SpreadsheetApp.getUi().alert('Task content has been cleared, and formulas have been reset.');
 }
 
 
