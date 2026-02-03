@@ -13,6 +13,24 @@
     *   當 `Object` (A欄) 或 `Resource` (F欄) 的內容變更時，腳本會**自動為該儲存格**套用獨特的背景顏色，方便使用者視覺化分組與辨識。
     *   此功能在背景自動執行，不會跳出任何提示訊息。
 
+## 視覺化時間軸 (甘特圖)
+
+WBS 的本質是 Project 的 work breakdown 的分析。
+
+![Work Breakdown Structure](wbs.png)
+
+WBS 的核心價值在於將專案任務進行系統性的分解。搭配 Google Sheets 內建的 **時間軸** 功能，你可以將 WBS 的內容轉換為視覺化的甘特圖，從不同維度進行專案管理與資源分配。
+
+### 專案甘特圖 (Project Gantt View)
+你可以利用 `Object` 欄位來追蹤不同目標（例如：不同專案、不同產品線）之間的時程重疊情況，確保開發步調一致。
+
+![Project Gantt View](wbs-gantt-view.png)
+
+### 資源檢視圖 (Resource View)
+你可以利用 `Resource` 欄位來追蹤同一個資源（例如：同一個團隊成員）在同一時間是否被指派了過多的任務，避免不合理的工作分配。
+
+![Resource View](wbs-resource-view.png)
+
 ---
 
 ## 安裝與使用說明
