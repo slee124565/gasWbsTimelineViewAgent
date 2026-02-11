@@ -1,0 +1,21 @@
+{
+  "name": "gas-multi-env-project",
+  "version": "1.0.0",
+  "description": "Google Apps Script multi-environment deployment flow",
+  "scripts": {
+    "--- 環境切換指令 ---": "",
+    "env:dev": "cp .clasp-dev.json .clasp.json && echo '切換至 [開發版]'",
+    "env:ipd": "cp .clasp-ipd.json .clasp.json && echo '切換至 [IPD]'",
+    "--- 開發常用 (Push 即可) ---": "",
+    "push:dev": "npm run env:dev && clasp login && clasp push",
+    "push:ipd": "npm run env:ipd && clasp login && clasp push",
+    "--- 部署指令 ---": "",
+    "version": "grep 'const SCRIPT_VERSION' code.js | cut -d '\"' -f 2",
+    "deploy:ipd": "npm run env:ipd && clasp push && clasp deploy -i AKfycbzrNBrYA9OlZxfpUf5wPHKBbMWHgr9q3RWfSTDwq2Ck3jgnGCFoCUxdKA5L06vo9t0Tvg -d \"$(npm run version --silent)\"",
+    "deploy:dev": "npm run env:dev && clasp push && clasp deploy -i AKfycbwYwc05dSY_K2tVQ8QjbQ6jEVqnwhz0rTBZiJbdMtnAVfd4YmFPxucxikl933eBff0 -d \"$(npm run version --silent)\""
+  },
+  "devDependencies": {
+    "@google/clasp": "^2.4.2",
+    "@types/google-apps-script": "^1.0.83"
+  }
+}

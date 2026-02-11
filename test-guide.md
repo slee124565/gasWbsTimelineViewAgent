@@ -134,4 +134,82 @@ This document provides the steps to manually test the functionality of the `gasW
     *   Verify that the header row (row 1) remains unchanged.
 
 ---
+
+## 3. Web API Interface Testing
+
+**Objective:** Verify that the `doGet(e)` API endpoint correctly returns WBS data in JSON format when deployed as a Web App.
+
+**Prerequisites:**
+
+*   The script has been initialized, and the `wbs` sheet contains some test data.
+*   You have created at least one other WBS sheet for testing, e.g., by running "建立新 WBS 工作表" a second time to create `wbs-1`.
+
+**Steps (Part A: Deployment):**
+
+1.  In the Apps Script editor, click **Deploy > New deployment**.
+2.  Select **Web app** as the deployment type.
+3.  In the **Who has access** field, select **Anyone** for this test.
+    *Note: For a real application, you should choose the most restrictive permission that meets your needs.*
+4.  Click **Deploy**.
+5.  **Important**: Copy the provided **Web app URL**. This is your API endpoint. You will need it for the following tests.
+
+### Test Case 3.1: Read Default `wbs` Sheet
+
+**Steps:**
+
+1.  Open a new browser tab.
+2.  Paste the Web app URL you copied during deployment and press Enter.
+
+**Verification:**
+
+*   The browser should display a JSON response.
+*   Verify the `status` field is `"success"`.
+*   Verify the `sheet` field is `"wbs"`.
+*   Verify the `data` array contains objects corresponding to the rows in your `wbs` sheet. The keys in each object should match the header names in the `wbs` sheet.
+
+### Test Case 3.2: Verify Filtering of Empty Rows
+
+**Objective:** Verify that the API correctly filters out rows where the `Object` column (Column A) is empty.
+
+**Steps:**
+
+1.  In your `wbs` sheet, ensure you have at least three rows of data.
+2.  Clear the content of cell `A3` (the `Object` for the second data row). Leave the rest of the data in that row.
+3.  In a browser, open the Web app URL for the default `wbs` sheet.
+
+**Verification:**
+
+*   Examine the JSON response.
+*   The `data` array should contain objects for the first and third data rows, but it **should not** contain an object for the second data row (where `A3` was cleared).
+*   Verify that the number of objects in the `data` array is one less than the total number of data rows you started with.
+
+### Test Case 3.3: Read a Specific Sheet (`wbs-1`)
+
+**Steps:**
+
+1.  Ensure you have a sheet named `wbs-1` with some test data.
+2.  In your browser, append the `?sheetName=wbs-1` parameter to your Web app URL.
+    *   Example: `https://script.google.com/.../exec?sheetName=wbs-1`
+
+**Verification:**
+
+*   The browser should display a new JSON response.
+*   Verify the `status` field is `"success"`.
+*   Verify the `sheet` field is `"wbs-1"`.
+*   Verify the `data` array contains the data from your `wbs-1` sheet.
+
+### Test Case 3.4: Handle Non-Existent Sheet
+
+**Steps:**
+
+1.  In your browser, use a sheet name that does not exist.
+    *   Example: `https://script.google.com/.../exec?sheetName=wbs-nonexistent`
+
+**Verification:**
+
+*   The browser should display an error JSON response.
+*   Verify the `status` field is `"error"`.
+*   Verify the `message` field contains the text `Sheet "wbs-nonexistent" not found.`.
+
+---
 **End of Test Guide**

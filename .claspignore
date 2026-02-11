@@ -12,7 +12,7 @@ node_modules/
 package.json
 package-lock.json
 
-.clasp.json
+.clasp*.json
 .claspignore
 
 .git/

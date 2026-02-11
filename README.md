@@ -49,7 +49,7 @@ WBS 的核心在於工作分解。雖然本工具目前著重於 WBS 資料的�
     *   你可以從此連結取得最新程式碼：[code.js](https://raw.githubusercontent.com/slee124565/gasWbsTimelineViewAgent/refs/heads/main/code.js)
 
 4.  **儲存並重新整理**:
-    *   儲存專案，然後重新整理你的 Google Sheet。你將會在頂部看到一個新的 **"🚀 WBS 自動化工具"** 選單。
+    *   儲存專案，然後重新整理你的 Google Sheet。你將會在頂部看到一個新的 **"🚀 WBS 自動化工具 (v1.2.0)"** 選單。
 
     ![Google Sheet Custom Menu](google-sheet-cust-menu.png)
 
@@ -76,6 +76,50 @@ WBS 的核心在於工作分解。雖然本工具目前著重於 WBS 資料的�
 ### 4. 套用 Resource 顏色標記
 *   **功能**: 手動為**當前啟用**的 `wbs` 工作表的 `Resource` 欄（F欄）中所有擁有相同值的儲存格套用相同的背景顏色。
 *   **操作**: 點擊 **🚀 WBS 自動化工具 > 4. 套用 Resource 顏色標記**。
+
+---
+
+## GAS Web API 介面 (可選)
+
+此腳本包含一個可選的 API 功能，允許外部應用程式透過 HTTP GET 請求讀取 WBS 工作表的資料。
+
+### 如何啟用 API
+1.  **部署為 Web App**:
+    *   在 Apps Script 編輯器中，點擊右上角的 **部署 > 新增部署**。
+    *   選擇 **"網頁應用程式"** 作為部署類型。
+    *   在 **"誰可以存取"** 欄位中，根據您的安全需求選擇存取權限 (例如，若要公開存取，請選擇 `任何人`)。
+    *   點擊 **"部署"**，並複製產生的 **Web App URL**。此 URL 即為您的 API 端點。
+
+### API 端點: `doGet(e)`
+*   **功能**: 讀取指定 WBS 工作表的資料，並以 JSON 格式回傳。此 API 只會回傳 `Object` 欄位（A欄）包含文字內容的資料列，自動過濾掉空行。
+*   **URL 參數**:
+    *   `sheetName` (可選): 指定要讀取的工作表名稱。若未提供，則預設讀取 `wbs`。
+*   **使用範例**:
+    *   讀取 `wbs` 工作表: `YOUR_WEB_APP_URL`
+    *   讀取 `wbs-2` 工作表: `YOUR_WEB_APP_URL?sheetName=wbs-2`
+
+### 回應格式
+*   **成功**:
+    ```json
+    {
+      "status": "success",
+      "sheet": "wbs",
+      "data": [
+        {
+          "Object": "專案A",
+          "TaskTitle": "任務1",
+          // ... 其他欄位
+        }
+      ]
+    }
+    ```
+*   **失敗 (找不到工作表)**:
+    ```json
+    {
+      "status": "error",
+      "message": "Sheet \"wbs-not-found\" not found."
+    }
+    ```
 
 ---
 

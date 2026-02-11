@@ -298,6 +298,84 @@ function showVersion() {
   SpreadsheetApp.getUi().alert(`目前腳本版本：${SCRIPT_VERSION}`);
 }
 
+/**
+ * Web App API 介面: 處理 HTTP GET 請求
+ * @param {Object} e - 事件物件，包含請求參數
+ * @returns {ContentService.TextOutput} - JSON 格式的回應
+ * 
+ * 功能：
+ * 1. 允許外部服務透過 GET 請求讀取指定 WBS 工作表的資料。
+ * 2. 可透過 URL 參數 `sheetName` 指定工作表，預設為 'wbs'。
+ * 3. 將工作表內容轉換為 JSON 物件陣列格式後回傳。
+ *
+ * 如何使用：
+ * 1. 在 Apps Script 編輯器中，點擊 "部署" > "新增部署"。
+ * 2. 選擇類型為 "網頁應用程式"。
+ * 3. 在 "誰可以存取" 中，根據你的需求選擇權限（例如 "任何人" 或 "僅限您網域中的使用者"）。
+ * 4. 部署後，你會得到一個網址。使用此網址即可存取 API。
+ *    - 讀取 'wbs' 工作表： `.../exec`
+ *    - 讀取 'wbs-1' 工作表：`.../exec?sheetName=wbs-1`
+ */
+function doGet(e) {
+  console.log('doGet API triggered');
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  // 允許透過 URL 參數指定工作表名稱，若未指定則預設為 'wbs'
+  const sheetName = e.parameter.sheetName || 'wbs';
+  const sheet = ss.getSheetByName(sheetName);
+
+  // 錯誤處理：如果找不到指定的工作表
+  if (!sheet) {
+    const errorResponse = {
+      status: 'error',
+      message: `Sheet "${sheetName}" not found.`
+    };
+    return ContentService.createTextOutput(JSON.stringify(errorResponse))
+      .setMimeType(ContentService.MimeType.JSON);
+  }
+
+  const dataRange = sheet.getDataRange();
+  const values = dataRange.getValues();
+
+  // 錯誤處理：如果工作表是空的或只有標頭
+  if (values.length <= 1) {
+    const emptyResponse = {
+      status: 'success',
+      sheet: sheetName,
+      data: []
+    };
+    return ContentService.createTextOutput(JSON.stringify(emptyResponse))
+      .setMimeType(ContentService.MimeType.JSON);
+  }
+
+  // 將第一列作為標頭（JSON 物件的鍵）
+  const headers = values.shift();
+  
+  // 篩選出 Column A (索引為 0) 有文字資料的行
+  const filteredValues = values.filter(row => {
+    // 檢查第一個元素是否存在且不是空字串（trim() 用於處理只包含空白字元的情況）
+    return row[0] !== undefined && String(row[0]).trim() !== '';
+  });
+
+  // 將篩選後的二維陣列轉換為物件陣列
+  const jsonData = filteredValues.map(row => {
+    let obj = {};
+    headers.forEach((header, index) => {
+      obj[header] = row[index];
+    });
+    return obj;
+  });
+
+  const successResponse = {
+    status: 'success',
+    sheet: sheetName,
+    data: jsonData
+  };
+
+  // 回傳 JSON 格式的資料
+  return ContentService.createTextOutput(JSON.stringify(successResponse, null, 2))
+    .setMimeType(ContentService.MimeType.JSON);
+}
+
 
 /**
  * 新增自訂選單
