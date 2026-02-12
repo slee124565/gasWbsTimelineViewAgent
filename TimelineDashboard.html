@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <base target="_top">
+    <title>SWD OKR Dashboard</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f4f4f4;
+            color: #333;
+        }
+        h1 {
+            color: #0056b3;
+            text-align: center;
+            margin-bottom: 10px;
+        }
+        p.last-updated {
+            text-align: center;
+            color: #666;
+            font-size: 0.9em;
+            margin-bottom: 20px;
+        }
+        .card-container {
+            display: flex;
+            flex-wrap: wrap; /* 允許換行 */
+            gap: 20px; /* 卡片間距 */
+            justify-content: center;
+            align-items: flex-start; /* 讓卡片頂部對齊 */
+        }
+        .card {
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            overflow: hidden;
+            flex: 1 1 calc(33.333% - 40px / 3); /* 三欄佈局，考慮 gap */
+            min-width: 300px; /* 最小寬度，防止過窄 */
+        }
+        .card-header {
+            padding: 15px;
+            color: #fff;
+            font-weight: bold;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .card-header.overdue { background-color: #ef5350; } /* Material Red 400 */
+        .card-header.upcoming { background-color: #2196f3; } /* Material Blue 500 */
+        .card-header.past { background-color: #4caf50; } /* Material Green 500 */
+
+        .badge {
+            background-color: rgba(255, 255, 255, 0.3);
+            color: #fff;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 0.8em;
+        }
+        .card-content {
+            padding: 15px;
+        }
+        .empty-state {
+            text-align: center;
+            color: #777;
+            padding: 20px;
+            font-style: italic;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.85em; /* 調整字體大小以容納更多欄位 */
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+            vertical-align: top;
+        }
+        th {
+            background-color: #f8f8f8;
+            font-weight: bold;
+        }
+        tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+        tr:hover {
+            background-color: #f1f1f1;
+        }
+        .overdue-date {
+            font-weight: bold;
+            color: #d32f2f; /* Material Red 700 */
+        }
+        .group-header td {
+            background-color: #e0e0e0; /* 灰色背景強調分組 */
+            font-weight: bold;
+            padding: 10px 8px;
+            border-bottom: 2px solid #bdbdbd;
+            border-top: 2px solid #bdbdbd;
+        }
+
+        /* Status Label Styles */
+        .status {
+            padding: 3px 8px;
+            border-radius: 12px;
+            color: #fff;
+            font-weight: 500;
+            font-size: 0.9em;
+            display: inline-block;
+            text-align: center;
+            min-width: 70px;
+        }
+        .status-done { background-color: #4CAF50; } /* Green */
+        .status-inprogress { background-color: #FFC107; color: #333; } /* Amber, with dark text */
+        .status-notstarted { background-color: #9E9E9E; } /* Grey */
+        .status-blocked { background-color: #F44336; } /* Red */
+        
+        /* Responsive design for smaller screens */
+        @media (max-width: 768px) {
+            .card-container {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            .card {
+                flex: 1 1 100%; /* 單欄佈局 */
+            }
+        }
+    </style>
+</head>
+<body>
+    <h1>SWD OKR Dashboard</h1>
+    <p class="last-updated">最後更新時間: <?= lastUpdated ?></p>
+
+    <div class="card-container">
+        <!-- 卡片 1: 已過期任務 (Overdue Tasks) - 加上 Object 分組 -->
+        <div class="card">
+            <div class="card-header overdue">
+                <span>⚠️ 已過期任務</span>
+                <span class="badge"><?= overdueTasks.length ?></span>
+            </div>
+            <div class="card-content">
+                <? if (overdueTasks.length === 0) { ?>
+                    <p class="empty-state">太棒了！目前沒有任何過期的任務。</p>
+                <? } else { ?>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>目標</th>
+                                <th>任務描述</th>
+                                <th>負責人</th>
+                                <th>截止日期</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <? var currentObjectOverdue = ''; /* 用於分組的變數 */ ?>
+                            <? for (var i = 0; i < overdueTasks.length; i++) { ?>
+                                <? if (overdueTasks[i]['Object'] !== currentObjectOverdue) { /* 當 Object 改變時顯示分組標頭 */ ?>
+                                    <tr class="group-header"><td colspan="4"><strong>目標: <?= overdueTasks[i]['Object'] ?></strong></td></tr>
+                                    <? currentObjectOverdue = overdueTasks[i]['Object']; ?>
+                                <? } ?>
+                                <tr>
+                                    <td><?= overdueTasks[i]['Object'] ?></td>
+                                    <td><?= overdueTasks[i]['TaskDescription-1'] ?></td>
+                                    <td><?= overdueTasks[i]['Resource'] ?></td>
+                                    <td class="overdue-date"><?= overdueTasks[i]['DueDate'] ?></td>
+                                </tr>
+                            <? } ?>
+                        </tbody>
+                    </table>
+                <? } ?>
+            </div>
+        </div>
+
+        <!-- 卡片 2: 未來四周計畫 (Upcoming Tasks) - 調整欄位、加上狀態顏色與 Object 分組 -->
+        <div class="card">
+            <div class="card-header upcoming">
+                <span>🚀 未來四周計畫</span>
+                <span class="badge"><?= futureTasks.length ?></span>
+            </div>
+            <div class="card-content">
+                <? if (futureTasks.length === 0) { ?>
+                    <p class="empty-state">未來四周沒有已排定的任務。</p>
+                <? } else { ?>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>目標</th>
+                                <th>任務描述 (2)</th>
+                                <th>狀態</th>
+                                <th>開始日期</th>
+                                <th>截止日期</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <? var currentObjectFuture = ''; /* 用於分組的變數 */ ?>
+                            <? for (var i = 0; i < futureTasks.length; i++) { ?>
+                                <? if (futureTasks[i]['Object'] !== currentObjectFuture) { /* 當 Object 改變時顯示分組標頭 */ ?>
+                                    <tr class="group-header"><td colspan="5"><strong>目標: <?= futureTasks[i]['Object'] ?></strong></td></tr>
+                                    <? currentObjectFuture = futureTasks[i]['Object']; ?>
+                                <? } ?>
+                                <tr>
+                                    <td><?= futureTasks[i]['Object'] ?></td>
+                                    <td><?= futureTasks[i]['TaskDescription-2'] ?></td>
+                                    <td><span class="status status-<?= futureTasks[i]['TaskStatus'] ? futureTasks[i]['TaskStatus'].toLowerCase() : '' ?>"><?= futureTasks[i]['TaskStatus'] ?></span></td>
+                                    <td><?= futureTasks[i]['StartDate'] ?></td>
+                                    <td><?= futureTasks[i]['DueDate'] ?></td>
+                                </tr>
+                            <? } ?>
+                        </tbody>
+                    </table>
+                <? } ?>
+            </div>
+        </div>
+
+        <!-- 卡片 3: 最近四周成果 (Recent Accomplishments) - 調整欄位、按 Object 分組並加上狀態顏色 -->
+        <div class="card">
+            <div class="card-header past">
+                <span>✅ 最近四周成果</span>
+                <span class="badge"><?= pastTasks.length ?></span>
+            </div>
+            <div class="card-content">
+                <? if (pastTasks.length === 0) { ?>
+                    <p class="empty-state">最近四周沒有已完成的任務。</p>
+                <? } else { ?>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>目標</th>
+                                <th>任務描述 (2)</th>
+                                <th>狀態</th>
+                                <th>開始日期</th>
+                                <th>截止日期</th>
+                                <th>完成日期</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <? var currentObject = ''; /* 用於分組的變數 */ ?>
+                            <? for (var i = 0; i < pastTasks.length; i++) { ?>
+                                <? if (pastTasks[i]['Object'] !== currentObject) { /* 當 Object 改變時顯示分組標頭 */ ?>
+                                    <tr class="group-header"><td colspan="6"><strong>目標: <?= pastTasks[i]['Object'] ?></strong></td></tr>
+                                    <? currentObject = pastTasks[i]['Object']; ?>
+                                <? } ?>
+                                <tr>
+                                    <td><?= pastTasks[i]['Object'] ?></td>
+                                    <td><?= pastTasks[i]['TaskDescription-2'] ?></td>
+                                    <td><span class="status status-<?= pastTasks[i]['TaskStatus'] ? pastTasks[i]['TaskStatus'].toLowerCase() : '' ?>"><?= pastTasks[i]['TaskStatus'] ?></span></td>
+                                    <td><?= pastTasks[i]['StartDate'] ?></td>
+                                    <td><?= pastTasks[i]['DueDate'] ?></td>
+                                    <td><?= pastTasks[i]['DoneDate'] ?></td>
+                                </tr>
+                            <? } ?>
+                        </tbody>
+                    </table>
+                <? } ?>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

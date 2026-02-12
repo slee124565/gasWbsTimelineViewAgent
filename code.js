@@ -298,36 +298,74 @@ function showVersion() {
   SpreadsheetApp.getUi().alert(`目前腳本版本：${SCRIPT_VERSION}`);
 }
 
+
 /**
- * Web App API 介面: 處理 HTTP GET 請求
- * @param {Object} e - 事件物件，包含請求參數
- * @returns {ContentService.TextOutput} - JSON 格式的回應
- * 
- * 功能：
- * 1. 允許外部服務透過 GET 請求讀取指定 WBS 工作表的資料。
- * 2. 可透過 URL 參數 `sheetName` 指定工作表，預設為 'wbs'。
- * 3. 將工作表內容轉換為 JSON 物件陣列格式後回傳。
+ * 處理 HTTP GET 請求的單一進入點 (路由)。
+ * 根據 URL 參數 `output` 決定回傳 JSON 或 CSV 格式的 WBS 資料，
+ * 或根據 `page` 參數（或預設）渲染 Timeline Dashboard 網頁。
+ * 同時處理 `wbs` 工作表不存在的錯誤情況。
  *
- * 如何使用：
- * 1. 在 Apps Script 編輯器中，點擊 "部署" > "新增部署"。
- * 2. 選擇類型為 "網頁應用程式"。
- * 3. 在 "誰可以存取" 中，根據你的需求選擇權限（例如 "任何人" 或 "僅限您網域中的使用者"）。
- * 4. 部署後，你會得到一個網址。使用此網址即可存取 API。
- *    - 讀取 'wbs' 工作表： `.../exec`
- *    - 讀取 'wbs-1' 工作表：`.../exec?sheetName=wbs-1`
+ * @param {Object} e - 事件物件，包含請求參數。
+ * @returns {ContentService.TextOutput|HtmlService.HtmlOutput} - 根據請求類型回傳 JSON/CSV 或 HTML 內容。
  */
 function doGet(e) {
-  console.log('doGet API triggered');
+  console.log('doGet function triggered');
+  const outputFormat = e.parameter.output; // 例如 ?output=json 或 ?output=csv
+  const page = e.parameter.page; // 例如 ?page=timeline_dashboard
+  const sheetName = 'wbs'; // 固定為 'wbs' 工作表，依據需求規格
+
   const ss = SpreadsheetApp.getActiveSpreadsheet();
-  // 允許透過 URL 參數指定工作表名稱，若未指定則預設為 'wbs'
-  const sheetName = e.parameter.sheetName || 'wbs';
   const sheet = ss.getSheetByName(sheetName);
 
-  // 錯誤處理：如果找不到指定的工作表
+  // 錯誤處理：如果找不到指定的工作表 'wbs'
+  if (!sheet) {
+    if (outputFormat === 'json' || outputFormat === 'csv') {
+      // API 錯誤回應
+      const errorResponse = {
+        status: 'error',
+        message: `Sheet "${sheetName}" not found. Please initialize the WBS system.`
+      };
+      return ContentService.createTextOutput(JSON.stringify(errorResponse))
+        .setMimeType(ContentService.MimeType.JSON);
+    } else {
+      // 網頁錯誤回應
+      return HtmlService.createHtmlOutput('<h1>錯誤：WBS 工作表未找到</h1><p>請先執行 WBS 系統的初始化 (透過 Google Sheet 介面)。</p>');
+    }
+  }
+
+  // API 路由
+  if (outputFormat === 'json') {
+    return getWbsDataAsJson(sheetName);
+  } else if (outputFormat === 'csv') {
+    return getWbsDataAsCsv(sheetName);
+  }
+
+  // 網頁路由
+  if (page === 'timeline_dashboard') {
+    return showTimelineDashboard(sheetName);
+  } else {
+    // 若無 output 參數或 page 參數不符，則預設顯示 Timeline Dashboard
+    return showTimelineDashboard(sheetName);
+  }
+}
+
+/**
+ * 取得指定 WBS 工作表的資料，並轉換為 JSON 格式回傳。
+ * (原 doGet 函數的核心邏輯)
+ *
+ * @param {string} sheetName - 要讀取的工作表名稱。
+ * @returns {ContentService.TextOutput} - JSON 格式的回應。
+ */
+function getWbsDataAsJson(sheetName) {
+  console.log(`getWbsDataAsJson triggered for sheet: ${sheetName}`);
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const sheet = ss.getSheetByName(sheetName);
+
+  // 根據 doGet 的錯誤處理，此處 sheet 應已存在，但為確保函數獨立性，再次檢查。
   if (!sheet) {
     const errorResponse = {
       status: 'error',
-      message: `Sheet "${sheetName}" not found.`
+      message: `Sheet "${sheetName}" not found during JSON data retrieval.`
     };
     return ContentService.createTextOutput(JSON.stringify(errorResponse))
       .setMimeType(ContentService.MimeType.JSON);
@@ -336,8 +374,7 @@ function doGet(e) {
   const dataRange = sheet.getDataRange();
   const values = dataRange.getValues();
 
-  // 錯誤處理：如果工作表是空的或只有標頭
-  if (values.length <= 1) {
+  if (values.length <= 1) { // 錯誤處理：如果工作表是空的或只有標頭
     const emptyResponse = {
       status: 'success',
       sheet: sheetName,
@@ -347,20 +384,23 @@ function doGet(e) {
       .setMimeType(ContentService.MimeType.JSON);
   }
 
-  // 將第一列作為標頭（JSON 物件的鍵）
-  const headers = values.shift();
+  const headers = values.shift(); // 將第一列作為標頭
   
   // 篩選出 Column A (索引為 0) 有文字資料的行
   const filteredValues = values.filter(row => {
-    // 檢查第一個元素是否存在且不是空字串（trim() 用於處理只包含空白字元的情況）
     return row[0] !== undefined && String(row[0]).trim() !== '';
   });
 
-  // 將篩選後的二維陣列轉換為物件陣列
   const jsonData = filteredValues.map(row => {
     let obj = {};
     headers.forEach((header, index) => {
-      obj[header] = row[index];
+      // 處理日期物件：Apps Script 會將試算表中的日期自動轉換為 Date 物件
+      if (row[index] instanceof Date) {
+        // 格式化為 YYYY-MM-DD 字串
+        obj[header] = Utilities.formatDate(row[index], SpreadsheetApp.getActiveSpreadsheet().getSpreadsheetTimeZone(), 'yyyy-MM-dd');
+      } else {
+        obj[header] = row[index];
+      }
     });
     return obj;
   });
@@ -371,10 +411,146 @@ function doGet(e) {
     data: jsonData
   };
 
-  // 回傳 JSON 格式的資料
   return ContentService.createTextOutput(JSON.stringify(successResponse, null, 2))
     .setMimeType(ContentService.MimeType.JSON);
 }
+
+/**
+ * 佔位符函數：取得指定 WBS 工作表的資料，並轉換為 CSV 格式回傳。
+ *
+ * @param {string} sheetName - 要讀取的工作表名稱。
+ * @returns {ContentService.TextOutput} - CSV 格式的回應。
+ */
+function getWbsDataAsCsv(sheetName) {
+  console.log(`getWbsDataAsCsv triggered for sheet: ${sheetName}`);
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const sheet = ss.getSheetByName(sheetName);
+
+  if (!sheet) {
+    return ContentService.createTextOutput(`Error: Sheet "${sheetName}" not found during CSV data retrieval.`)
+      .setMimeType(ContentService.MimeType.PLAIN_TEXT);
+  }
+
+  const data = sheet.getDataRange().getDisplayValues(); // 取得顯示值，包含公式結果
+  const csv = data.map(row => 
+    row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(',')
+  ).join('\n');
+
+  // 修正：使用 downloadAsFile 參數來設定檔名，並設定正確的 MimeType
+  const output = ContentService.createTextOutput(csv)
+    .setMimeType(ContentService.MimeType.PLAIN_TEXT)
+    .downloadAsFile(`${sheetName}.csv`);
+  
+  return output;
+}
+
+/**
+ * 佔位符函數：渲染 Timeline Dashboard 網頁。
+ *
+ * @param {string} sheetName - 要讀取的工作表名稱。
+ * @returns {HtmlService.HtmlOutput} - HTML 網頁內容。
+ */
+function showTimelineDashboard(sheetName) {
+  console.log(`showTimelineDashboard triggered for sheet: ${sheetName}`);
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const sheet = ss.getSheetByName(sheetName);
+
+  // 此處假設 sheet 已在 doGet 中檢查過存在性，但仍進行防禦性檢查
+  if (!sheet) {
+    return HtmlService.createHtmlOutput('<h1>錯誤：WBS 工作表未找到</h1><p>請先執行 WBS 系統的初始化。</p>');
+  }
+
+  const dataRange = sheet.getDataRange();
+  const values = dataRange.getValues();
+
+  if (values.length <= 1) { // 如果工作表是空的或只有標頭
+    const template = HtmlService.createTemplateFromFile('TimelineDashboard');
+    template.lastUpdated = Utilities.formatDate(new Date(), SpreadsheetApp.getActiveSpreadsheet().getSpreadsheetTimeZone(), 'yyyy-MM-dd HH:mm');
+    template.overdueTasks = [];
+    template.futureTasks = [];
+    template.pastTasks = [];
+    return template.evaluate().setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
+  }
+
+  const headers = values.shift(); // 取得標頭，並移除第一列
+  const allTasks = values.filter(row => row[0] !== undefined && String(row[0]).trim() !== ''); // 篩選 Object 欄位有內容的行
+
+  // 將所有任務轉換為物件陣列，並格式化日期
+  const tasksAsObjects = allTasks.map(row => {
+    let obj = {};
+    headers.forEach((header, index) => {
+      const value = row[index];
+      // 對日期欄位進行格式化
+      if (value instanceof Date) {
+        obj[header] = Utilities.formatDate(value, ss.getSpreadsheetTimeZone(), 'yyyy-MM-dd');
+      } else {
+        obj[header] = value;
+      }
+    });
+    return obj;
+  });
+
+  // --- 日期基準計算 ---
+  const today = new Date();
+  today.setHours(0, 0, 0, 0); // 將時間歸零以便比較日期
+  const fourWeeksAgo = new Date(today.getTime() - 28 * 24 * 60 * 60 * 1000);
+  const fourWeeksHence = new Date(today.getTime() + 28 * 24 * 60 * 60 * 1000);
+
+  // --- 篩選資料 ---
+  let overdueTasks = [];
+  let futureTasks = [];
+  let pastTasks = [];
+
+  tasksAsObjects.forEach(task => {
+    const dueDate = task.DueDate ? new Date(task.DueDate) : null;
+    const taskStatus = task.TaskStatus;
+
+    if (dueDate) {
+      if (dueDate < today && taskStatus !== 'Done' && taskStatus !== 'Blocked') {
+        overdueTasks.push(task);
+      } else if (dueDate >= today && dueDate <= fourWeeksHence && taskStatus !== 'Done') {
+        futureTasks.push(task);
+      } else if (dueDate >= fourWeeksAgo && dueDate < today && taskStatus === 'Done') {
+        pastTasks.push(task);
+      }
+    }
+  });
+
+  // --- 排序資料 ---
+  // 調整 `overdueTasks` 排序以支援 Object 分組：先依 Object 排序，再依 DueDate 排序
+  overdueTasks.sort((a, b) => {
+    if (a.Object < b.Object) return -1;
+    if (a.Object > b.Object) return 1;
+    return new Date(a.DueDate).getTime() - new Date(b.DueDate).getTime(); // 次要排序條件：DueDate (升序)
+  });
+  
+  // 調整 `futureTasks` 排序以支援 Object 分組：先依 Object 排序，再依 DueDate 排序
+  futureTasks.sort((a, b) => {
+    if (a.Object < b.Object) return -1;
+    if (a.Object > b.Object) return 1;
+    return new Date(a.DueDate).getTime() - new Date(b.DueDate).getTime(); // 次要排序條件：DueDate (升序)
+  });
+  
+  // 調整 `pastTasks` 排序以支援 Object 分組：先依 Object 排序，再依 DueDate 排序
+  pastTasks.sort((a, b) => {
+    // 主要排序條件：Object (升序)
+    if (a.Object < b.Object) return -1;
+    if (a.Object > b.Object) return 1;
+    
+    // 次要排序條件：DueDate (降序)
+    return new Date(b.DueDate).getTime() - new Date(a.DueDate).getTime();
+  });
+
+  const template = HtmlService.createTemplateFromFile('TimelineDashboard');
+  template.lastUpdated = Utilities.formatDate(new Date(), ss.getSpreadsheetTimeZone(), 'yyyy-MM-dd HH:mm');
+  template.overdueTasks = overdueTasks;
+  template.futureTasks = futureTasks;
+  template.pastTasks = pastTasks;
+
+  return template.evaluate().setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
+}
+
+
 
 
 /**
